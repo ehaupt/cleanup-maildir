@@ -1,6 +1,6 @@
 # cleanup-maildir
 
-Script for cleaning up and archiving mails in Maildir folders based on arival date.
+Script for cleaning up and archiving mails in Maildir folders based on arrival date.
 
 This is a fork of [ehaupt/cleanup-maildir](https://github.com/ehaupt/cleanup-maildir).
 
