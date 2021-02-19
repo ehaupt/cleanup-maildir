@@ -2,10 +2,8 @@
 
 Script for cleaning up and archiving mails in Maildir folders based on arrival date.
 
-This is a fork of [ehaupt/cleanup-maildir](https://github.com/ehaupt/cleanup-maildir).
-
-The version of cleanup-maildir.py in this repo is ported to Python 3.8 and
-uses standard modules to interface with Maildir folders:
+The version of cleanup-maildir.py in this repo is ported to Python 3.8 by
+@mhyllander and uses standard modules to interface with Maildir folders:
 
 * email
 * mailbox
