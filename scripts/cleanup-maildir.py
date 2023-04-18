@@ -166,7 +166,7 @@ class MaildirMessage(mailbox.MaildirMessage):
 
     def getReferences(self):
         references = self.get('References')
-        if references is None:
+        if not references:
             return []
         # remove commas between references before splitting
         references = re.sub(r'>\s*,\s*<', '> <', references).strip()
