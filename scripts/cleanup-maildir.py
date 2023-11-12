@@ -102,7 +102,9 @@ import os
 import os.path
 import re
 import sys
+import gzip
 from datetime import datetime, timedelta
+import io
 
 
 class MessageDateError(TypeError):
@@ -126,7 +128,18 @@ class MaildirMessage(mailbox.MaildirMessage):
         created here using the correct policy (EmailPolicy), and then
         passed to super for initialization.
         """
-        super().__init__(email.message_from_binary_file(f, policy = email.policy.default))
+        # Check if file is gunzipped. First bytes 0x1f 0x8b indicates GZ format
+        # 0x1f = 31 dec, 0x8b = 139 dec
+        mime_type = f.read(2)
+        if mime_type[0] == 31 and mime_type[1] == 139:
+            f.seek(0)
+            real_file = io.BytesIO(gzip.decompress(f.read()))
+        else:
+            real_file = f
+        f.seek(0)
+
+
+        super().__init__(email.message_from_binary_file(real_file, policy = email.policy.default))
 
     def isFlagged(self):
         """return true if the message is flagged as important"""
@@ -396,6 +409,9 @@ class MaildirCleaner(object):
         for i, msg_key in enumerate(maildir.iterkeys()):
             msg = maildir.get_message(msg_key)
             mid = msg.getMessageId()
+            # If a message is gzipped, and, for any reason, cannot be parsed, it should not be moved.
+            if msg.getSubject() == None:
+                continue
             if mid in self.keepMsgIds:
                 if msg.isFlagged():
                     self.stats['flagged'] += 1
