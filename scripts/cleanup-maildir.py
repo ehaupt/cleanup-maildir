@@ -170,7 +170,7 @@ class MaildirMessage(mailbox.MaildirMessage):
             return []
         # remove commas between references before splitting
         references = re.sub(r'>\s*,\s*<', '> <', references).strip()
-        return [mid for mid in re.split('\s+', references) if mid[0] == '<' and mid[-1] == '>']
+        return [mid for mid in re.split(r'\s+', references) if mid[0] == '<' and mid[-1] == '>']
 
     def getDateSent(self):
         """Get the time of sending from the Date header
