@@ -136,10 +136,24 @@ class MaildirMessage(mailbox.MaildirMessage):
         """return true if the message is marked as not seen"""
         return not 'S' in self.get_flags()
 
+    def _safe_header(self, name):
+        """Safely retrieve a header value.
+
+        Python 3's email.policy.default uses strict RFC header parsing
+        which can raise exceptions on malformed headers commonly found
+        in the wild (e.g. invalid Message-ID from Microsoft, broken
+        References, non-RFC compliant Date fields).
+        Returns None if the header cannot be parsed.
+        """
+        try:
+            return self.get(name)
+        except (IndexError, KeyError, TypeError, ValueError):
+            return None
+
     def getSubject(self):
         """get the message's subject as a unicode string"""
 
-        return self.get("Subject")
+        return self._safe_header("Subject")
 
     def getSubjectHash(self):
         """get the message's subject in a "normalized" form
@@ -153,10 +167,10 @@ class MaildirMessage(mailbox.MaildirMessage):
         return re.sub(r'^(re|fwd?):\s*', '', s.lower().strip())
 
     def getMessageId(self):
-        return self.get('Message-ID')
+        return self._safe_header('Message-ID')
 
     def getInReplyTo(self):
-        irt = self.get('In-Reply-To')
+        irt = self._safe_header('In-Reply-To')
         if irt is None:
             return None
         # Handle an empty In-Reply-To gracefully (RT does generate those).
@@ -165,12 +179,12 @@ class MaildirMessage(mailbox.MaildirMessage):
         return irt
 
     def getReferences(self):
-        references = self.get('References')
+        references = self._safe_header('References')
         if not references:
             return []
         # remove commas between references before splitting
         references = re.sub(r'>\s*,\s*<', '> <', references).strip()
-        return [mid for mid in re.split('\s+', references) if mid[0] == '<' and mid[-1] == '>']
+        return [mid for mid in re.split(r'\s+', references) if mid[0] == '<' and mid[-1] == '>']
 
     def getDateSent(self):
         """Get the time of sending from the Date header
@@ -179,7 +193,7 @@ class MaildirMessage(mailbox.MaildirMessage):
         the Date header can be missing or spoofed (and often is, by spammers).
         Throws a MessageDateError if the Date header is missing or invalid.
         """
-        dh = self.get('Date')
+        dh = self._safe_header('Date')
         if dh == None:
             return None
         try:
